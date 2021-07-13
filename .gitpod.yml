@@ -6,18 +6,18 @@
 tasks:
   - before: |
       echo "Do Before" >> /workspace/StartLog
+      ls -al /home/gitpod/.bash* >> /workspace/StartLog
       env >> /workspace/StartLog
       echo "alias l='ls -alF'" >>/home/gitpod/.bashrc
-      . ~/.bashrc
-      echo "After .bashrc" >> /workspace/StartLog
-      env >> /workspace/StartLog
       g++ test.cpp -o test >> /workspace/StartLog
     init: |
       echo "Do Init" >> /workspace/StartLog
+      ls -al /home/gitpod/.bash* >> /workspace/StartLog
       env >> /workspace/StartLog
       g++ test.cpp -o test >> /workspace/StartLog
     command: |
       echo "Do Command" >> /workspace/StartLog
+      ls -al /home/gitpod/.bash* >> /workspace/StartLog
       env >> /workspace/StartLog
       g++ test.cpp -o test >> /workspace/StartLog
 
