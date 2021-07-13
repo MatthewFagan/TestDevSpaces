@@ -5,14 +5,20 @@
 # List the start up tasks. You can start them in parallel in multiple terminals. See https://www.gitpod.io/docs/config-start-tasks/
 tasks:
   - before: |
-      echo "alias l='ls -alF'" >>/home/gitpod/.bashrc
       echo "Do Before" >> /workspace/StartLog
+      env >> /workspace/StartLog
+      echo "alias l='ls -alF'" >>/home/gitpod/.bashrc
+      . ~/.bashrc
+      echo "After .bashrc" >> /workspace/StartLog
+      env >> /workspace/StartLog
       g++ test.cpp -o test >> /workspace/StartLog
     init: |
       echo "Do Init" >> /workspace/StartLog
+      env >> /workspace/StartLog
       g++ test.cpp -o test >> /workspace/StartLog
     command: |
       echo "Do Command" >> /workspace/StartLog
+      env >> /workspace/StartLog
       g++ test.cpp -o test >> /workspace/StartLog
 
 vscode:
