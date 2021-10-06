@@ -26,3 +26,4 @@ vscode:
     - webfreak.debug
     - https://github.com/microsoft/vscode-cpptools/releases/download/1.4.1/cpptools-linux.vsix
     - https://github.com/microsoft/vscode-cpptools/releases/download/1.4.1/cpptools-linux-aarch64.vsix
+    - /workspace/TestDevSpaces/extensions/vscode-maven-0.34.0_vsixhub.com.vsix
