@@ -24,6 +24,8 @@ tasks:
 hosts:
   name1: 127.0.0.1
   name2: 127.0.0.2
+  name3: 127.0.0.1
+  name7: 127.0.0.1
 vscode:
   extensions:
     - https://github.com/microsoft/vscode-cpptools/releases/download/1.4.1/cpptools-linux.vsix
