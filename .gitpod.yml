@@ -21,7 +21,9 @@ tasks:
       ls -al /home/gitpod/.bash* >> /workspace/StartLog
       env >> /workspace/StartLog
       g++ test.cpp -o test >> /workspace/StartLog
-
+locahostaliases:
+  - name1
+  - name2
 vscode:
   extensions:
     - https://github.com/microsoft/vscode-cpptools/releases/download/1.4.1/cpptools-linux.vsix
