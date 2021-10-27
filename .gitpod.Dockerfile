@@ -8,12 +8,12 @@ RUN install-packages mysql-server \
  && chown -R gitpod:gitpod /etc/mysql /var/run/mysqld /var/log/mysql /var/lib/mysql /var/lib/mysql-files /var/lib/mysql-keyring /var/lib/mysql-upgrade
 
 # Install our own MySQL config
-COPY image/mysql.cnf /etc/mysql/mysql.conf.d/mysqld.cnf
+COPY gitpod-setup/mysql.cnf /etc/mysql/mysql.conf.d/mysqld.cnf
 
 # Install default-login for MySQL clients
-COPY image/client.cnf /etc/mysql/mysql.conf.d/client.cnf
+COPY gitpod-setup/client.cnf /etc/mysql/mysql.conf.d/client.cnf
 
-COPY image/mysql-bashrc-launch.sh /etc/mysql/mysql-bashrc-launch.sh
+COPY gitpod-setup/mysql-bashrc-launch.sh /etc/mysql/mysql-bashrc-launch.sh
 
 USER gitpod
 
