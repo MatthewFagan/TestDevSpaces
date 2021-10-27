@@ -1,4 +1,4 @@
-FROM gitpod/workspace-full
+FROM devfactory/workspace-full
 
 USER root
 
