@@ -1,0 +1,21 @@
+mkdir ~/.aws 2>/dev/null
+echo "[default]" >~/.aws/credentials
+echo "aws_access_key_id = $AWS_ACCESS_KEY" >>~/.aws/credentials
+echo "aws_access_secret_key = $AWS_SECRET_KEY" >>~/.aws/credentials
+echo "[default]" >~/.aws/config
+echo "region = us-east-2" >~/.aws/config
+echo "output = json" >~/.aws/config
+alias kc='kubectl'
+echo "alias kc='kubectl'" >>~/.bashrc
+export PATH=/workspace/TestDevSpaces/bin:$PATH
+echo 'export PATH=/workspace/TestDevSpaces/bin:$PATH' >>~/.bashrc
+cd /tmp
+if [ `uname -m` = "aarch64" ]; then
+wget https://github.com/ahmetb/kubectx/releases/download/v0.9.4/kubectx_v0.9.4_linux_arm64.tar.gz -O kubectx.tar.gz
+else
+wget https://github.com/ahmetb/kubectx/releases/download/v0.9.4/kubectx_v0.9.4_linux_x86_64.tar.gz -O kubectx.tar.gz
+fi
+tar xvf kubectx.tar.gz
+sudo mv kubectx /usr/local/bin
+aws eks update-kubeconfig --region us-east-2 --name devspaces-staging
+kubectx staging=.

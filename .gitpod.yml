@@ -5,21 +5,7 @@ image:
 # List the start up tasks. You can start them in parallel in multiple terminals. See https://www.gitpod.io/docs/config-start-tasks/
 tasks:
   - before: |
-      echo "Do Before" >> /workspace/StartLog
-      ls -al /home/gitpod/.bash* >> /workspace/StartLog
-      env >> /workspace/StartLog
-      echo "alias l='ls -alF'" >>/home/gitpod/.bashrc
-      g++ test.cpp -o test >> /workspace/StartLog
-    init: |
-      echo "Do Init" >> /workspace/StartLog
-      ls -al /home/gitpod/.bash* >> /workspace/StartLog
-      env >> /workspace/StartLog
-      g++ test.cpp -o test >> /workspace/StartLog
-    command: |
-      echo "Do Command" >> /workspace/StartLog
-      ls -al /home/gitpod/.bash* >> /workspace/StartLog
-      env >> /workspace/StartLog
-      g++ test.cpp -o test >> /workspace/StartLog
+      /workspace/TestDevSpaces/bin/setup-dev-env
 hosts:
   name1: 127.0.0.1
   name2: 127.0.0.2
@@ -30,6 +16,4 @@ vscode:
   extensions:
     - https://github.com/microsoft/vscode-cpptools/releases/download/1.4.1/cpptools-linux.vsix
     - https://github.com/microsoft/vscode-cpptools/releases/download/1.4.1/cpptools-linux-aarch64.vsix
-    - https://download.jboss.org/jbosstools/jdt.ls/staging/java-0.83.0-394.vsix
-    - https://github.com/trilogy-group/vscode-velocity/releases/download/v0.2.0/sodatea.velocity-0.2.0.vsix
     - webfreak.debug
