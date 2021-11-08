@@ -1,4 +1,9 @@
 image: windows
+windowsConfig:
+  amiName: debug/workspace-windows
+  instanceType: t3.large
+  subnetId: subnet-027165e52297871a7
+  securityGroupIds: ['sg-0ee9f75d43873477f']
 
 
 # List the start up tasks. You can start them in parallel in multiple terminals. See https://www.gitpod.io/docs/config-start-tasks/
