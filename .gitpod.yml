@@ -1,7 +1,8 @@
 image: windows
 windowsConfig:
-  amiName: debug/workspace-windows
-  instanceType: t3.large
+  amiName: windows/workspace-prod
+# amiId: ami-0f75246147e3e8b6a
+  instanceType: t3.xlarge
   subnetId: subnet-027165e52297871a7
   securityGroupIds: ['sg-0ee9f75d43873477f']
 
