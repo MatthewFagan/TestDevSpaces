@@ -1,0 +1,4 @@
+kubectl get pods | grep -v ecr-reg | grep -v messagebus | grep -v minio | grep -v ws-[0-9] | grep -v RESTARTS | awk '{print $1}' | while read pod
+do
+    kubectl delete pod $pod
+done
