@@ -1,0 +1,5 @@
+CHARTVER=`helm list | grep ^gitpod | awk '{print $9}'`
+APPVER=`helm list | grep ^gitpod | awk '{print $10}'`
+CHARTVER="${CHARTVER%.*}.$((${CHARTVER##*.}+1))"
+echo "Chart: $CHARTVER"
+echo "App: $APPVER"

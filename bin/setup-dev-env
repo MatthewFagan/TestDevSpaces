@@ -9,7 +9,20 @@ alias kc='kubectl'
 echo "alias kc='kubectl'" >>~/.bashrc
 export PATH=/workspace/TestDevSpaces/bin:$PATH
 echo 'export PATH=/workspace/TestDevSpaces/bin:$PATH' >>~/.bashrc
+
 cd /tmp
+if [ `uname -m` = "aarch64" ]; then
+wget https://github.com/mikefarah/yq/releases/download/v4.14.1/yq_linux_arm64.tar.gz -O yq.tar.gz
+else
+wget https://github.com/mikefarah/yq/releases/download/v4.14.1/yq_linux_amd64.tar.gz -O yq.tar.gz
+fi
+mkdir yq-install
+cd yq-install
+tar xvf ../yq.tar.gz
+sudo mv yq_linux* /usr/local/bin/yq
+cd ..
+rm -rf yq-install yq.tar.gz
+
 if [ `uname -m` = "aarch64" ]; then
 wget https://github.com/ahmetb/kubectx/releases/download/v0.9.4/kubectx_v0.9.4_linux_arm64.tar.gz -O kubectx.tar.gz
 else
@@ -17,5 +30,7 @@ wget https://github.com/ahmetb/kubectx/releases/download/v0.9.4/kubectx_v0.9.4_l
 fi
 tar xvf kubectx.tar.gz
 sudo mv kubectx /usr/local/bin
+rm kubectx.tar.gz
+
 aws eks update-kubeconfig --region us-east-2 --name devspaces-staging
 kubectx staging=.
