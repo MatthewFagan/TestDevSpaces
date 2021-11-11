@@ -1,5 +1,7 @@
-CHARTVER=`helm list | grep ^gitpod | awk '{print $9}'`
+CHARTFULLVER=`helm list | grep ^gitpod | awk '{print $9}'`
+CHARTVER=${CHARTFULLVER##*-}
 APPVER=`helm list | grep ^gitpod | awk '{print $10}'`
 CHARTVER="${CHARTVER%.*}.$((${CHARTVER##*.}+1))"
 echo "Chart: $CHARTVER"
 echo "App: $APPVER"
+yq -i -y ".version=\"$CHARTVER\" | .appVersion=\"$APPVER\"" chart/Chart.yaml
