@@ -1,0 +1,7 @@
+kubectl get secret gitpod-database -o json > /tmp/gpdb-sec.json
+GPHOST=`cat /tmp/gpdb-sec.json | jq -r '.data.host' | base64 --decode`
+GPPORT=`cat /tmp/gpdb-sec.json | jq -r '.data.port' | base64 --decode`
+GPUSER=`cat /tmp/gpdb-sec.json | jq -r '.data.user' | base64 --decode`
+GPPW=`cat /tmp/gpdb-sec.json | jq -r '.data.password' | base64 --decode`
+GPDB=`cat /tmp/gpdb-sec.json | jq -r '.data.database' | base64 --decode`
+mysql --host=$GPHOST --port=$GPPORT --user=$GPUSER --password=$GPPW $GPDB

@@ -1,4 +1,23 @@
-kubectl get pods | grep -v ecr-reg | grep -v messagebus | grep -v minio | grep -v ws-[0-9] | grep -v RESTARTS | awk '{print $1}' | while read pod
-do
-    kubectl delete pod $pod
+strings=(
+    blobserve
+    content-service
+    dashboard
+    nodetaint
+    overprovisioning
+    proxy
+    server
+    ws-manager
+    ws-manager-bridge
+    ws-proxy
+)
+for i in "${strings[@]}"; do
+    echo "Restarting $i"
+    kubectl rollout restart deployment $i
 done
+kubectl delete pod -l component=ws-daemon
+kubectl create job --from=cronjob/ecr-regeneration-cron ecr-regeneration-cron-manual-$(date +%s)
+
+# kubectl get pods | grep -v ecr-reg | grep -v messagebus | grep -v minio | grep -v ws-[0-9] | grep -v RESTARTS | awk '{print $1}' | while read pod
+# do
+#     kubectl delete pod $pod
+# done
