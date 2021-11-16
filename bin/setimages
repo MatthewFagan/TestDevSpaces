@@ -1,0 +1,27 @@
+#!/bin/bash
+
+RELSRCPATH=`dirname ${BASH_SOURCE[0]}`
+SRCPATH=`realpath $RELSRCPATH`
+
+. $SRCPATH/include
+
+CleanUpError() {
+    RmTemp
+    exit 1
+}
+
+[ -f "$1" ] || {
+    echo "Arg 1 must specify file" 1>&2
+    exit 1
+}
+
+MkTemp || exit 1
+
+. $1
+ApplyImages || CleanUpError
+
+#GetAllImages || CleanUpError
+#PrintAllImages || CleanUpError
+
+RmTemp
+

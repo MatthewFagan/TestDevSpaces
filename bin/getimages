@@ -1,0 +1,19 @@
+#!/bin/bash
+
+RELSRCPATH=`dirname ${BASH_SOURCE[0]}`
+SRCPATH=`realpath $RELSRCPATH`
+
+. $SRCPATH/include
+
+CleanUpError() {
+    RmTemp
+    exit 1
+}
+
+MkTemp || exit 1
+GetAllImages || CleanUpError
+PrintAllImages || CleanUpError
+
+RmTemp
+
+

@@ -1,0 +1,340 @@
+#!/bin/bash
+
+MkTemp() {
+    KC_WORKING_FOLDER=`mktemp -d -t $(date +%Y%m%d%H%M%S)-XXXXXXXXXX`
+}
+
+RmTemp() {
+    if echo $KC_WORKING_FOLDER | grep ^/tmp/ >/dev/null; then
+        rm -rf $KC_WORKING_FOLDER
+    fi
+    unset KC_WORKING_FOLDER
+}
+
+KcRetry() {
+    RETRIES=5
+    while [ $RETRIES -gt 0 ]; do
+        kubectl $* >$KC_WORKING_FOLDER/tmp.out 2>$KC_WORKING_FOLDER/tmp.err
+        if [ $? -eq 0 ]; then
+            cat $KC_WORKING_FOLDER/tmp.out
+            return 0
+        fi
+        let RETRIES--
+    done
+    echo "While executing: kubectl $*"
+    cat $KC_WORKING_FOLDER/tmp.err 1>&2
+    return 1
+}
+
+GetAll() {
+    KcRetry get cm -o json > $KC_WORKING_FOLDER/all-cm.json || return 1
+    KcRetry get daemonsets -o json > $KC_WORKING_FOLDER/all-ds.json || return 1
+    KcRetry get deployments -o json > $KC_WORKING_FOLDER/all-deps.json || return 1
+}
+
+GetRegFacImageFromAllCm() {
+    cat $KC_WORKING_FOLDER/all-cm.json | jq -r ".items[] | select (.metadata.name == \"registry-facade-config\") | .data[\"config.json\"] | fromjson | .registry.staticLayer[] | select (.ref | contains(\"$1\")).ref"
+}
+
+GetDockerUpImageFromAll() {
+    DOCKERUP_IMAGE=$(GetRegFacImageFromAllCm docker-up)
+}
+GetSupervisorImageFromAll() {
+    SUPERVISOR_IMAGE=$(GetRegFacImageFromAllCm supervisor)
+}
+
+
+
+GetNamedImageFromAllDS() {
+    CNAME="$2"
+    if [ "$CNAME" == "" ]; then
+        CNAME="$1"
+    fi
+    cat $KC_WORKING_FOLDER/all-ds.json | jq -r ".items[] | select (.metadata.name == \"$1\") | .spec.template.spec.containers[] | select (.name == \"$CNAME\").image"
+}
+GetNamedInitImageFromAllDS() {
+    CNAME="$2"
+    if [ "$CNAME" == "" ]; then
+        CNAME="$1"
+    fi
+    cat $KC_WORKING_FOLDER/all-ds.json | jq -r ".items[] | select (.metadata.name == \"$1\") | .spec.template.spec.initContainers[] | select (.name == \"$CNAME\").image"
+}
+
+GetRegistryFacadeImageFromAll() {
+    REGISTRY_FACADE_IMAGE=$(GetNamedImageFromAllDS registry-facade)
+}
+GetWSDaemonImageFromAll() {
+    WSDAEMON_IMAGE=$(GetNamedImageFromAllDS ws-daemon)
+}
+GetShiftFSModuleLoaderImageFromAll() {
+    SHIFTFS_MODULE_LOADER_IMAGE=$(GetNamedInitImageFromAllDS ws-daemon shiftfs-module-loader)
+}
+GetSeccompProfileInstallerImageFromAll() {
+    SECCOMP_PROFILE_INSTALLER_IMAGE=$(GetNamedInitImageFromAllDS ws-daemon seccomp-profile-installer)
+}
+
+
+
+GetNamedImageFromAllDeps() {
+    CNAME="$2"
+    if [ "$CNAME" == "" ]; then
+        CNAME="$1"
+    fi
+    cat $KC_WORKING_FOLDER/all-deps.json | jq -r ".items[] | select (.metadata.name == \"$1\") | .spec.template.spec.containers[] | select (.name == \"$CNAME\").image"
+}
+
+GetBlobServeImageFromAll() {
+    BLOBSERVE_IMAGE=$(GetNamedImageFromAllDeps blobserve)
+}
+GetContentServiceImageFromAll() {
+    CONTENT_SERVICE_IMAGE=$(GetNamedImageFromAllDeps content-service)
+}
+GetDashboardImageFromAll() {
+    DASHBOARD_IMAGE=$(GetNamedImageFromAllDeps dashboard)
+}
+GetImageBuilderImageFromAll() {
+    IMAGE_BUILDER_IMAGE=$(GetNamedImageFromAllDeps image-builder service)
+}
+GetProxyImageFromAll() {
+    PROXY_IMAGE=$(GetNamedImageFromAllDeps proxy)
+}
+GetServerImageFromAll() {
+    SERVER_IMAGE=$(GetNamedImageFromAllDeps server)
+}
+GetWSManagerImageFromAll() {
+    WSMANAGER_IMAGE=$(GetNamedImageFromAllDeps ws-manager)
+}
+GetWSManagerBridgeImageFromAll() {
+    WSMANAGER_BRIDGE_IMAGE=$(GetNamedImageFromAllDeps ws-manager-bridge)
+}
+GetWSProxyImageFromAll() {
+    WSPROXY_IMAGE=$(GetNamedImageFromAllDeps ws-proxy)
+}
+
+GetAllImages() {
+    GetAll || return 1
+    GetBlobServeImageFromAll || return 1
+    GetContentServiceImageFromAll || return 1
+    GetDashboardImageFromAll || return 1
+    GetImageBuilderImageFromAll || return 1
+    GetProxyImageFromAll || return 1
+    GetServerImageFromAll || return 1
+    GetWSManagerImageFromAll || return 1
+    GetWSManagerBridgeImageFromAll || return 1
+    GetWSProxyImageFromAll || return 1
+
+    GetDockerUpImageFromAll || return 1
+    GetSupervisorImageFromAll || return 1
+
+    GetRegistryFacadeImageFromAll || return 1
+    GetWSDaemonImageFromAll || return 1
+    GetShiftFSModuleLoaderImageFromAll || return 1
+    GetSeccompProfileInstallerImageFromAll || return 1
+}
+
+PrintAllImages() {
+    echo "BLOBSERVE_IMAGE=$BLOBSERVE_IMAGE"
+    echo "CONTENT_SERVICE_IMAGE=$CONTENT_SERVICE_IMAGE"
+    echo "DASHBOARD_IMAGE=$DASHBOARD_IMAGE"
+    echo "DOCKERUP_IMAGE=$DOCKERUP_IMAGE"
+    echo "IMAGE_BUILDER_IMAGE=$IMAGE_BUILDER_IMAGE"
+    echo "PROXY_IMAGE=$PROXY_IMAGE"
+    echo "REGISTRY_FACADE_IMAGE=$REGISTRY_FACADE_IMAGE"
+    echo "SECCOMP_PROFILE_INSTALLER_IMAGE=$SECCOMP_PROFILE_INSTALLER_IMAGE"
+    echo "SERVER_IMAGE=$SERVER_IMAGE"
+    echo "SHIFTFS_MODULE_LOADER_IMAGE=$SHIFTFS_MODULE_LOADER_IMAGE"
+    echo "SUPERVISOR_IMAGE=$SUPERVISOR_IMAGE"
+    echo "WSDAEMON_IMAGE=$WSDAEMON_IMAGE"
+    echo "WSMANAGER_IMAGE=$WSMANAGER_IMAGE"
+    echo "WSMANAGER_BRIDGE_IMAGE=$WSMANAGER_BRIDGE_IMAGE"
+    echo "WSPROXY_IMAGE=$WSPROXY_IMAGE"
+}
+
+ClearImages() {
+    BLOBSERVE_IMAGE=
+    CONTENT_SERVICE_IMAGE=
+    DASHBOARD_IMAGE=
+    DOCKERUP_IMAGE=
+    IMAGE_BUILDER_IMAGE=
+    PROXY_IMAGE=
+    REGISTRY_FACADE_IMAGE=
+    SECCOMP_PROFILE_INSTALLER_IMAGE=
+    SERVER_IMAGE=
+    SHIFTFS_MODULE_LOADER_IMAGE=
+    SUPERVISOR_IMAGE=
+    WSDAEMON_IMAGE=
+    WSMANAGER_IMAGE=
+    WSMANAGER_BRIDGE_IMAGE=
+    WSPROXY_IMAGE=
+}
+
+PrintImageTemplate() {
+    echo "# To specify one or more images, uncomment the relevant lines and specify the images (e.g. public.ecr.aws/b1o4t7o5/blobserve:0.8.4)"
+    echo ""
+    echo "#BLOBSERVE_IMAGE="
+    echo "#CONTENT_SERVICE_IMAGE="
+    echo "#DASHBOARD_IMAGE="
+    echo "#DOCKERUP_IMAGE="
+    echo "#IMAGE_BUILDER_IMAGE="
+    echo "#PROXY_IMAGE="
+    echo "#REGISTRY_FACADE_IMAGE="
+    echo "#SECCOMP_PROFILE_INSTALLER_IMAGE="
+    echo "#SERVER_IMAGE="
+    echo "#SHIFTFS_MODULE_LOADER_IMAGE="
+    echo "#SUPERVISOR_IMAGE="
+    echo "#WSDAEMON_IMAGE="
+    echo "#WSMANAGER_IMAGE="
+    echo "#WSMANAGER_BRIDGE_IMAGE="
+    echo "#WSPROXY_IMAGE="
+}
+
+LoadImages() {
+    ClearImages
+    . $1
+}
+
+SetDockerAndSupervisorImage() {
+    KcRetry get cm registry-facade-config -o json > $KC_WORKING_FOLDER/registry-facade-config.json || return 1
+    SETDU="$1"
+    SETSU="$2"
+
+    cat $KC_WORKING_FOLDER/registry-facade-config.json | jq -r ".data[\"config.json\"] | fromjson" > $KC_WORKING_FOLDER/registry-facade-config.data.json
+    EXVAL_DU=$(cat $KC_WORKING_FOLDER/registry-facade-config.data.json | jq -r ".registry.staticLayer[] | select (.ref | contains(\"docker-up\")).ref")
+    EXVAL_SU=$(cat $KC_WORKING_FOLDER/registry-facade-config.data.json | jq -r ".registry.staticLayer[] | select (.ref | contains(\"supervisor\")).ref")
+    [ "$1" = "" ] && SETDU="$EXVAL_DU"
+    [ "$2" = "" ] && SETSU="$EXVAL_SU"
+    [ "$EXVAL_DU" = "$SETDU" -a "$EXVAL_SU" = "$SETSU" ] && return 0
+    NEWDATA=$(cat $KC_WORKING_FOLDER/registry-facade-config.data.json | jq "(.registry.staticLayer[] | select (.ref | contains(\"docker-up\")).ref) = \"$SETDU\" | (.registry.staticLayer[] | select (.ref | contains(\"supervisor\")).ref) = \"$SETSU\" | tojson")
+    echo "Setting docker-up: $SETDU" 1>&2
+    echo "Setting supervisor: $SETSU" 1>&2
+    cat $KC_WORKING_FOLDER/registry-facade-config.json | jq ".data[\"config.json\"] = $NEWDATA" > $KC_WORKING_FOLDER/registry-facade-config.new.json
+    kubectl apply -f $KC_WORKING_FOLDER/registry-facade-config.new.json
+    # NEED TO RESTART REGISTRY-FACADE FOR CHANGES TO APPLY
+}
+
+SetNamedImageInKc() {
+    CNAME="$5"
+    if [ "$CNAME" == "" ]; then
+        CNAME="$4"
+    fi
+
+    KcRetry get $1 $4 -o json > $KC_WORKING_FOLDER/$4.json || return 1
+
+    EXVAL=$(cat $KC_WORKING_FOLDER/$4.json | jq -r ".spec.template.spec.$2[] | select (.name == \"$CNAME\").image")
+    [ "$EXVAL" == "$3" ] && return 0
+    echo "Setting $4: $3" 1>&2
+    cat $KC_WORKING_FOLDER/$4.json | jq "(.spec.template.spec.$2[] | select (.name == \"$CNAME\").image) = \"$3\" | (.spec.template.spec.$2[] | select (.name == \"$CNAME\").imagePullPolicy) = \"Always\"" >$KC_WORKING_FOLDER/$4.new.json
+    kubectl apply -f $KC_WORKING_FOLDER/$4.new.json
+}
+
+SetNamedInitImageInDs() {
+    SetNamedImageInKc daemonset initContainers $*
+}
+
+SetNamedImageInDs() {
+    SetNamedImageInKc daemonset containers $*
+#    CNAME="$3"
+#    if [ "$CNAME" == "" ]; then
+#        CNAME="$2"
+#    fi
+#
+#    KcRetry get daemonset $2 -o json > $KC_WORKING_FOLDER/$2.json || return 1
+#
+#    EXVAL=$(cat $KC_WORKING_FOLDER/$2.json | jq -r ".spec.template.spec.containers[] | select (.name == \"$CNAME\").image")
+#    [ "$EXVAL" == "$1" ] && return 0
+#    echo "Setting $2: $1" 1>&2
+#    cat $KC_WORKING_FOLDER/$2.json | jq "(.spec.template.spec.containers[] | select (.name == \"$CNAME\").image) = \"$1\"" >$KC_WORKING_FOLDER/$2.new.json
+#    kubectl apply -f $KC_WORKING_FOLDER/$2.new.json
+}
+
+SetRegistryFacadeImage() {
+    SetNamedImageInDs $1 registry-facade
+}
+
+SetWSDaemonImages() {
+    # $1 is ws-daemon
+    # $2 is seccomp-profile-installer
+    # $3 is shiftfs-module-loader
+    KcRetry get daemonset ws-daemon -o json > $KC_WORKING_FOLDER/ws-daemon.json || return 1
+    SETWS="$1"
+    SETSE="$2"
+    SETSH="$3"
+
+    EXVAL_WS=$(cat $KC_WORKING_FOLDER/ws-daemon.json | jq -r ".spec.template.spec.containers[] | select (.name == \"ws-daemon\").image")
+    EXVAL_SE=$(cat $KC_WORKING_FOLDER/ws-daemon.json | jq -r ".spec.template.spec.initContainers[] | select (.name == \"seccomp-profile-installer\").image")
+    EXVAL_SH=$(cat $KC_WORKING_FOLDER/ws-daemon.json | jq -r ".spec.template.spec.initContainers[] | select (.name == \"shiftfs-module-loader\").image")
+    [ "$1" = "" ] && SETWS="$EXVAL_WS"
+    [ "$2" = "" ] && SETSE="$EXVAL_SE"
+    [ "$3" = "" ] && SETSH="$EXVAL_SH"
+    [ "$EXVAL_WS" = "$SETWS" -a "$EXVAL_SE" = "$SETSE" -a "$EXVAL_SH" = "$SETSH" ] && return 0
+    cat $KC_WORKING_FOLDER/ws-daemon.json | jq "(.spec.template.spec.containers[] | select (.name == \"ws-daemon\").image) = \"$SETWS\" | (.spec.template.spec.initContainers[] | select (.name == \"seccomp-profile-installer\").image) = \"$SETSE\" | (.spec.template.spec.initContainers[] | select (.name == \"shiftfs-module-loader\").image) = \"$SETSH\"" > $KC_WORKING_FOLDER/ws-daemon.new.json
+    echo "Setting ws-daemon: $SETWS" 1>&2
+    echo "Setting seccomp-profile-installer: $SETSE" 1>&2
+    echo "Setting shiftfs-module-loader: $SETSH" 1>&2
+    kubectl apply -f $KC_WORKING_FOLDER/ws-daemon.new.json
+}
+
+
+SetNamedImageInDep() {
+    SetNamedImageInKc deployment containers $*
+#    CNAME="$3"
+#    if [ "$CNAME" == "" ]; then
+#        CNAME="$2"
+#    fi
+#
+#    KcRetry get deployment $2 -o json > $KC_WORKING_FOLDER/$2.json || return 1
+#
+#    EXVAL=$(cat $KC_WORKING_FOLDER/$2.json | jq -r ".spec.template.spec.containers[] | select (.name == \"$CNAME\").image")
+#    [ "$EXVAL" == "$1" ] && return 0
+#    echo "Setting $2: $1" 1>&2
+#    cat $KC_WORKING_FOLDER/$2.json | jq "(.spec.template.spec.containers[] | select (.name == \"$CNAME\").image) = \"$1\"" >$KC_WORKING_FOLDER/$2.new.json
+#    kubectl apply -f $KC_WORKING_FOLDER/$2.new.json
+}
+SetBlobServeImage() {
+    SetNamedImageInDep "$1" blobserve
+}
+SetContentServiceImage() {
+    SetNamedImageInDep "$1" content-service
+}
+SetDashboardImage() {
+    SetNamedImageInDep "$1" dashboard
+}
+SetImageBuilderImage() {
+    SetNamedImageInDep "$1" image-builder service
+}
+SetProxyImage() {
+    SetNamedImageInDep "$1" proxy
+}
+SetServerImage() {
+    SetNamedImageInDep "$1" server
+}
+SetWSManagerImage() {
+    SetNamedImageInDep "$1" ws-manager
+}
+SetWSManagerBridgeImage() {
+    SetNamedImageInDep "$1" ws-manager-bridge
+}
+SetWSProxyImage() {
+    SetNamedImageInDep "$1" ws-proxy
+}
+
+ApplyImages() {
+# From deployments
+    [ "$BLOBSERVE_IMAGE" = "" ] || SetBlobServeImage "$BLOBSERVE_IMAGE" || return 1
+    [ "$CONTENT_SERVICE_IMAGE" = "" ] || SetContentServiceImage "$CONTENT_SERVICE_IMAGE" || return 1
+    [ "$DASHBOARD_IMAGE" = "" ] || SetDashboardImage "$DASHBOARD_IMAGE" || return 1
+    [ "$IMAGE_BUILDER_IMAGE" = "" ] || SetImageBuilderImage "$IMAGE_BUILDER_IMAGE" || return 1
+    [ "$PROXY_IMAGE" = "" ] || SetProxyImage "$PROXY_IMAGE" || return 1
+    [ "$SERVER_IMAGE" = "" ] || SetServerImage "$SERVER_IMAGE" || return 1
+    [ "$WSMANAGER_IMAGE" = "" ] || SetWSManagerImage "$WSMANAGER_IMAGE" || return 1
+    [ "$WSMANAGER_BRIDGE_IMAGE" = "" ] || SetWSManagerBridgeImage "$WSMANAGER_BRIDGE_IMAGE" || return 1
+    [ "$WSPROXY_IMAGE" = "" ] || SetWSProxyImage "$WSPROXY_IMAGE" || return 1
+
+# From configmaps
+# docker-up and supervisor both go into the same config map
+    [ "$DOCKERUP_IMAGE" = "" -a "$SUPERVISOR_IMAGE" = "" ] || SetDockerAndSupervisorImage "$DOCKERUP_IMAGE" "$SUPERVISOR_IMAGE" || return 1
+
+# From daemonsets
+    [ "$REGISTRY_FACADE_IMAGE" = "" ] || SetRegistryFacadeImage "$REGISTRY_FACADE_IMAGE" || return 1
+    [ "$WSDAEMON_IMAGE" = "" -a "$SECCOMP_PROFILE_INSTALLER_IMAGE" = "" -a "$SHIFTFS_MODULE_LOADER_IMAGE" = "" ] || SetWSDaemonImages "$WSDAEMON_IMAGE" "$SECCOMP_PROFILE_INSTALLER_IMAGE" "$SHIFTFS_MODULE_LOADER_IMAGE" || return 1
+}
