@@ -3,6 +3,14 @@ image-builder-mk3)
   export POD=`kubectl get pods | grep ^image-builder-mk3 | awk '{print $1}'`
   export CONTAINER=image-builder-mk3
   ;;
+server)
+  export POD=`kubectl get pods | grep ^server | awk '{print $1}'`
+  export CONTAINER=server
+  ;;
+ws-manager)
+  export POD=`kubectl get pods | grep ^ws-manager | grep -v ^ws-manager-bridge | awk '{print $1}'`
+  export CONTAINER=ws-manager
+  ;;
 *)
   exit 1
   ;;
