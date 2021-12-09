@@ -1,0 +1,10 @@
+case "$1" in
+image-builder-mk3)
+  export POD=`kubectl get pods | grep ^image-builder-mk3 | awk '{print $1}'`
+  export CONTAINER=image-builder-mk3
+  ;;
+*)
+  exit 1
+  ;;
+esac
+kubectl logs $POD $CONTAINER -f
