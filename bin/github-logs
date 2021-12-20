@@ -1,0 +1,2 @@
+POD=`kubectl get pods | grep server | awk '{print $1}'`
+kubectl logs $POD server -f | grep --line-buffered "GitHub"
