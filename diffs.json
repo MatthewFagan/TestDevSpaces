@@ -1,0 +1,21 @@
+LHS: Config
+RHS: OldConfig
+100a101
+>   "devBranch": "",
+103d103
+<   "enablePayment": false,
+106d105
+<     "appCert": "xxxx",
+109c108
+<     "certSecretName": "prebuild-github-app-cert",
+---
+>     "certPath": "/github-app-cert/cert",
+111c110,111
+<     "marketplaceName": "",
+---
+>     "logLevel": "trace",
+>     "marketplaceName": "unknown",
+117c117
+<   "imageBuilderAddr": "image-builder:8080",
+---
+>   "imageBuilderAddr": "image-builder-mk3:8080",
