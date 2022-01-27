@@ -1,0 +1,5 @@
+kubectx developx86 2>/dev/null
+if [ $? -ne 0 ]; then
+    aws eks update-kubeconfig --region us-east-2 --name devspaces-developx86
+    kubectx developx86=.
+fi
