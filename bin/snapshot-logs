@@ -1,0 +1,36 @@
+#!/bin/bash
+
+DATE=$(date +%Y%m%d%H%M%S)
+OUT=/workspace/logs-$DATE
+mkdir -p $OUT
+PODDATA=$(kubectl get pods -o json --all-namespaces)
+NODEDATA=$(kubectl get nodes -o json)
+echo "$PODDATA" > $OUT/allpods.json
+echo "$NODEDATA" > $OUT/allnodes.json
+NODES=$(echo "$PODDATA" | jq -r '.items[].spec.nodeName' | sort -u)
+for node in $NODES; do
+    echo "Node: $node"
+    echo "Node: $node" >> $OUT/Summary.txt
+    PODS_IN_NODE=$(echo "$PODDATA" | jq -r ".items[] | select( .spec.nodeName==\"$node\") | .metadata.name")
+    for pod in $PODS_IN_NODE; do
+        POD_NAMESPACE=$(echo "$PODDATA" | jq -r ".items[] | select( .metadata.name==\"$pod\") | .metadata.namespace")
+        POD_STATUS=$(echo "$PODDATA" | jq ".items[] | select( .metadata.name==\"$pod\") | .status")
+        POD_PHASE=$(echo "$POD_STATUS" | jq -r ".phase")
+        POD_IP=$(echo "$POD_STATUS" | jq -r ".podIP")
+        printf "  %-60.60s  %-12.12s  %s\n" $pod $POD_PHASE $POD_IP
+        printf "  %-60.60s  %-12.12s  %s\n" $pod $POD_PHASE $POD_IP >> $OUT/Summary.txt
+        INIT_CONTAINERS=$(echo "$POD_STATUS" | jq -r ".initContainerStatuses[].name" 2>/dev/null)
+        for cont in $INIT_CONTAINERS; do
+            printf "    Init %s\n" $cont
+            kubectl logs -n $POD_NAMESPACE $pod -c $cont > $OUT/$pod-init-$cont.log&
+        done
+        CONTAINERS=$(echo "$POD_STATUS" | jq -r ".containerStatuses[].name")
+        for cont in $CONTAINERS; do
+            printf "    Cont %s\n" $cont
+            kubectl logs -n $POD_NAMESPACE $pod -c $cont > $OUT/$pod-cont-$cont.log&
+        done
+    done
+done
+cd $OUT
+cat Summary.txt
+echo "Snapshot stored in $OUT"
