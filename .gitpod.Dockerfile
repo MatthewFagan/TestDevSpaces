@@ -2,7 +2,7 @@ FROM centos:7
 
 RUN yum install -y epel-release
 RUN yum install -y which tar make libsmi gcc libxml2-devel flex bison perl rpm-build git mysql-devel libdb-devel perl-DBI perl-XML-Simple
-RUN yum groupinstall -y 'Development Tools'
+#RUN yum groupinstall -y 'Development Tools'
 #RUN yum install -y https://nexus.devfactory.com/repository/lithium2-raw-release/build-tools/c-ares/TextPassC-ares-1.10.0-05.02.05.00.RHEL7.x86_64.rpm
 #RUN yum install -y https://nexus.devfactory.com/repository/lithium2-raw-release/build-tools/snacc/snacc-1.3-4.fc12.x86_64.rpm
 #
