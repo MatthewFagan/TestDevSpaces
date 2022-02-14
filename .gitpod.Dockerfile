@@ -7,7 +7,7 @@ RUN yum install -y https://nexus.devfactory.com/repository/lithium2-raw-release/
 RUN yum install -y https://nexus.devfactory.com/repository/lithium2-raw-release/build-tools/snacc/snacc-1.3-4.fc12.x86_64.rpm
 
 
-RUN wget https://download.libsodium.org/libsodium/releases/old/libsodium-1.0.16.tar.gz && \
+RUN wget --no-check-certificate https://download.libsodium.org/libsodium/releases/old/libsodium-1.0.16.tar.gz && \
     tar -xvzf libsodium-1.0.16.tar.gz && \
     cd libsodium-1.0.16 && \
     ./configure && \
