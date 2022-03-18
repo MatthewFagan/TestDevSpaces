@@ -7,6 +7,10 @@ tasks:
   - before: |
       /workspace/TestDevSpaces/bin/setup-dev-env
       . ~/.bashrc
+  - command: |
+      echo "Two"
+  - command: |
+      echo "Three"
 hosts:
   name1: 127.0.0.1
   name2: 127.0.0.2
