@@ -1,4 +1,4 @@
-FROM devfactory/workspace-centos7:test2
+FROM devfactory/workspace-centos7
 
 #RUN yum install -y epel-release
 #RUN yum install -y which tar make libsmi gcc libxml2-devel flex bison perl rpm-build git mysql-devel libdb-devel perl-DBI perl-XML-Simple
